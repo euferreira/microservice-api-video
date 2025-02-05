@@ -1,0 +1,10 @@
+{
+    "[php]": {
+        "editor.defaultColorDecorators": true,
+        "editor.defaultFormatter": "bmewburn.vscode-intelephense-client",
+        "editor.formatOnSave": true,
+    },
+    "intelephense.format.braces": "allman",
+    "intelephense.format.enable": true,
+    "intelephense.environment.phpVersion": "8.3.0"
+}
