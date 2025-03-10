@@ -8,16 +8,16 @@ class DomainValidation
 {
     public static function notNull(string $value, ?string $exceptMessage = null)
     {
-        if (empty($value))
-        {
+        if (empty($value)) {
             throw new EntityValidationException($exceptMessage ?? "Value cannot be null");
         }
     }
 
     public static function strMaxLength(string $value, int $maxLength = 255, ?string $exceptMessage = null)
     {
-        if (strlen($value) <= $maxLength)
+        if (strlen($value) >= $maxLength) {
             throw new EntityValidationException($exceptMessage ?? "Value cannot be greater than {$maxLength} characters");
+        }
     }
 
     public static function strMinLength(string $value, int $minLength = 1, ?string $exceptMessage = null)
