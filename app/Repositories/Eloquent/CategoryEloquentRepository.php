@@ -102,4 +102,12 @@ class CategoryEloquentRepository implements CategoryRepositoryInterface
 
         return $categoryDb->delete();
     }
+
+    public function getIdsListIds(array $categoriesId = []): array
+    {
+        return $this->model
+            ->whereIn('id', $categoriesId)
+            ->get()
+            ->pluck('id');
+    }
 }

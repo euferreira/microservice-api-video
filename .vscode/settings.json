@@ -1,6 +1,6 @@
 {
     "[php]": {
-        "editor.defaultColorDecorators": true,
+        "editor.defaultColorDecorators": "auto",
         "editor.defaultFormatter": "bmewburn.vscode-intelephense-client",
         "editor.formatOnSave": true,
     },
