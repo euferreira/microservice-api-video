@@ -2,16 +2,15 @@
 
 namespace Core\UseCase\Genre;
 
-use Core\Domain\Entity\Genre;
 use Core\Domain\Exception\NotFoundException;
 use Core\Domain\Repository\CategoryRepositoryInterface;
 use Core\Domain\Repository\GenreRepositoryInterface;
-use Core\UseCase\DTO\Genre\Create\GenreInputCreateDto;
-use Core\UseCase\DTO\Genre\Create\GenreOutputCreateDto;
+use Core\UseCase\DTO\Genre\Update\GenreUpdateInputDto;
+use Core\UseCase\DTO\Genre\Update\GenreUpdateOutputDto;
 use Core\UseCase\Interfaces\TransactionInterface;
 use Throwable;
 
-class CreateGenreUseCase
+class UpdateGenreUseCase
 {
     public function __construct(
         protected GenreRepositoryInterface    $repository,
@@ -21,28 +20,27 @@ class CreateGenreUseCase
     {
     }
 
-    /**
-     * @throws Throwable
-     * @throws NotFoundException
-     */
-    public function execute(GenreInputCreateDto $input): GenreOutputCreateDto
+    public function execute(GenreUpdateInputDto $input): GenreUpdateOutputDto
     {
+        $genre = $this->repository->findById($input->id);
+
         try {
-            $genre = new Genre(
+            $genre->update(
                 name: $input->name,
-                isActive: $input->isActive,
-                categoriesId: $input->categoriesId,
             );
+            foreach ($input->categoriesId as $categoryId) {
+                $genre->addCategory($categoryId);
+            }
+
             $this->validateCategoriesId($input->categoriesId);
 
-            $genreDb = $this->repository->insert($genre);
-
+            $genreDb = $this->repository->update($genre);
             $this->transaction->commit();
-            return new GenreOutputCreateDto(
+
+            return new GenreUpdateOutputDto(
                 id: (string)$genreDb->id,
                 name: $genreDb->name,
-                is_active: $genreDb->isActive,
-                created_at: $genreDb->createdAt(),
+                categoriesIds: $genreDb->categoriesId,
             );
         } catch (Throwable $exception) {
             $this->transaction->rollback();

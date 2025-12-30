@@ -2,7 +2,7 @@
     "[php]": {
         "editor.defaultColorDecorators": "auto",
         "editor.defaultFormatter": "bmewburn.vscode-intelephense-client",
-        "editor.formatOnSave": true,
+        "editor.formatOnSave": true
     },
     "intelephense.format.braces": "allman",
     "intelephense.format.enable": true,

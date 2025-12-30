@@ -6,14 +6,14 @@ use Core\Domain\Entity\Genre as EntityGenre;
 use Core\Domain\Exception\NotFoundException;
 use Core\Domain\Repository\CategoryRepositoryInterface;
 use Core\Domain\Repository\GenreRepositoryInterface;
-use Core\UseCase\DTO\Genre\Create\GenreInputCreateDto;
-use Core\UseCase\DTO\Genre\Create\GenreOutputCreateDto;
-use Core\UseCase\Genre\CreateGenreUseCase;
+use Core\UseCase\DTO\Genre\Update\GenreUpdateInputDto;
+use Core\UseCase\DTO\Genre\Update\GenreUpdateOutputDto;
+use Core\UseCase\Genre\UpdateGenreUseCase;
 use Core\UseCase\Interfaces\TransactionInterface;
 use PHPUnit\Framework\TestCase;
 use Ramsey\Uuid\Uuid;
 
-class CreateGenreUseCaseUnitTest extends TestCase
+class UpdateGenreUseCaseUnitTest extends TestCase
 {
     protected function tearDown(): void
     {
@@ -27,17 +27,22 @@ class CreateGenreUseCaseUnitTest extends TestCase
             'teste', new \Core\Domain\ValueObject\Uuid($uuid), true, []
         ]);
         $mockEntity->shouldReceive('createdAt')->andReturn(date('Y-m-d H:i:s'));
+        $mockEntity->shouldReceive('update')->times(1);
+        $mockEntity->shouldReceive('addCategory');
 
         return $mockEntity;
     }
 
     private function mockRepository(string $uuid, int $timesCalled = 1)
     {
+        $mockEntity = $this->mockEntity($uuid);
+
         $mockRepository = \Mockery::mock(\stdClass::class, GenreRepositoryInterface::class);
-        $mockRepository->shouldReceive('insert')
-//            ->once() //garante que foi chamado uma unica vez
-            ->times($timesCalled)
-            ->andReturn($this->mockEntity($uuid));
+        $mockRepository->shouldReceive('findById')
+            ->once()
+            ->with($uuid)
+            ->andReturn($mockEntity);
+        $mockRepository->shouldReceive('update')->times($timesCalled)->andReturn($mockEntity);
 
         return $mockRepository;
     }
@@ -61,41 +66,37 @@ class CreateGenreUseCaseUnitTest extends TestCase
         return $mockCategoryRepository;
     }
 
-    private function mockCreateInputDto(array $categoriesIds)
+    private function mockUpdateInputDto(string $uuid, array $categoriesIds = [])
     {
-        return \Mockery::mock(GenreInputCreateDto::class, [
-            'name', $categoriesIds, true
+        return \Mockery::mock(GenreUpdateInputDto::class, [
+            $uuid, 'name to update', $categoriesIds
         ]);
     }
 
-    public function test_create(): void
+    public function test_update()
     {
         $uuid = (string)Uuid::uuid4();
-
-        $usecase = new CreateGenreUseCase(
+        $usecase = new UpdateGenreUseCase(
             $this->mockRepository($uuid),
             $this->mockTransaction(),
             $this->mockCategoryRepository($uuid),
         );
+        $response = $usecase->execute($this->mockUpdateInputDto($uuid));
 
-        $response = $usecase->execute($this->mockCreateInputDto([$uuid]));
-
-        $this->assertInstanceOf(GenreOutputCreateDto::class, $response);
+        $this->assertInstanceOf(GenreUpdateOutputDto::class, $response);
     }
 
-    public function test_create_categories_not_found(): void
+    public function test_update_categories_not_found(): void
     {
         $this->expectException(NotFoundException::class);
 
         $uuid = (string)Uuid::uuid4();
-        $usecase = new CreateGenreUseCase(
+        $useCase = new UpdateGenreUseCase(
             $this->mockRepository($uuid, 0),
             $this->mockTransaction(),
             $this->mockCategoryRepository($uuid),
         );
 
-        $usecase->execute($this->mockCreateInputDto(
-            [$uuid, 'fake_category-id']
-        ));
+        $useCase->execute($this->mockUpdateInputDto($uuid, [$uuid, 'fake_value']));
     }
 }
